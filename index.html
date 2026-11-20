@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#07111f"><meta name="description" content="Personal bilingual POOKIEE AI assistant">
+<link rel="manifest" href="manifest.webmanifest">
+<title>P.O.O.K.I.E.E. — Personal AI</title>
+<style>
+:root{--bg:#050b14;--panel:#0b1726;--panel2:#102238;--line:#173b55;--cyan:#53dcff;--blue:#288dff;--text:#e8f6ff;--muted:#8ba8bb;--user:#123b56}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% -15%,#123b58 0,transparent 48%),var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh}
+header{height:68px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;border-bottom:1px solid #153047;background:#07111fdd;position:sticky;top:0;z-index:3;backdrop-filter:blur(14px)}
+.brand{letter-spacing:3px;font-weight:800;color:var(--cyan);font-size:18px}.brand small{display:block;font-size:9px;letter-spacing:2px;color:var(--muted);font-weight:500}
+button,input,select{font:inherit}button{cursor:pointer;border:1px solid var(--line);background:#10253a;color:var(--text);border-radius:12px;padding:10px 14px}button:hover{border-color:var(--cyan)}button:disabled{opacity:.45;cursor:not-allowed}
+.wrap{max-width:900px;margin:auto;padding:18px 14px 120px}.hero{text-align:center;padding:24px 0 18px}
+.orb{width:112px;height:112px;margin:0 auto 12px;border-radius:50%;border:1px solid #50dfff88;display:grid;place-items:center;box-shadow:0 0 22px #26bfff55,inset 0 0 25px #26bfff22;position:relative}
+.orb:before,.orb:after{content:"";position:absolute;border:1px solid #45cfff55;border-radius:50%;inset:-9px;animation:pulse 3s infinite}.orb:after{inset:-18px;animation-delay:1.5s}
+.orb span{font-size:39px;color:var(--cyan);text-shadow:0 0 18px var(--cyan)}@keyframes pulse{50%{transform:scale(1.08);opacity:.25}}
+.status{font-size:12px;color:var(--muted);letter-spacing:1.5px}.status b{color:#70f5c2}
+.panel{background:linear-gradient(145deg,#0b1929,#081321);border:1px solid var(--line);border-radius:18px;overflow:hidden}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;padding:12px;border-bottom:1px solid var(--line);align-items:center}.toolbar select{background:#0d2032;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:9px}
+#chat{height:min(48vh,480px);min-height:280px;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:12px}
+.msg{max-width:88%;padding:11px 14px;border-radius:15px;white-space:pre-wrap;overflow-wrap:anywhere}.user{align-self:flex-end;background:var(--user);border:1px solid #24658b}.ai{align-self:flex-start;background:#0d2031;border:1px solid #1b4058}.who{font-size:10px;letter-spacing:1px;color:var(--cyan);margin-bottom:4px}
+.composer{padding:12px;border-top:1px solid var(--line);display:flex;gap:8px;align-items:flex-end}.composer textarea{flex:1;resize:none;min-height:48px;max-height:130px;background:#071321;border:1px solid var(--line);border-radius:13px;color:var(--text);padding:12px;outline:none}.send{background:linear-gradient(120deg,#087fb0,#1768c9);border:0;font-weight:700}.mic{width:48px;height:48px;border-radius:50%;font-size:19px}.mic.listening{background:#7b2030;border-color:#ff667b;box-shadow:0 0 18px #ff667b77}
+.note{color:var(--muted);font-size:12px;margin:12px 3px}.settings{margin-top:16px;padding:15px}.settings h3{margin:0 0 10px;color:var(--cyan);font-size:14px;letter-spacing:1px}.field{display:flex;flex-direction:column;gap:5px;margin:10px 0}.field label{font-size:12px;color:var(--muted)}.field input,.field select{width:100%;background:#061321;border:1px solid var(--line);border-radius:10px;padding:11px;color:var(--text)}.row{display:flex;gap:10px}.row>*{flex:1;min-width:0}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.tiny{font-size:11px;color:var(--muted)}.error{color:#ff9ca8}.typing{color:var(--muted);font-style:italic}
+@media(max-width:560px){header{padding:0 12px}.wrap{padding:10px 10px 110px}.hero{padding:18px 0 14px}.orb{width:92px;height:92px}.msg{max-width:94%}.composer{gap:6px;padding:9px}.composer textarea{padding:10px}.send{padding:10px}.row{flex-direction:column;gap:0}}
+</style>
+</head>
+<body>
+<header><div class="brand">P.O.O.K.I.E.E.<small>PERSONAL AI SYSTEM · V1.0</small></div><button id="settingsBtn">⚙ Settings</button></header>
+<main class="wrap">
+<section class="hero"><div class="orb"><span>◈</span></div><div class="status" id="status"><b>● SYSTEM READY</b> · WAITING FOR INPUT</div></section>
+<section class="panel">
+ <div class="toolbar"><select id="inputLang" aria-label="Voice input language"><option value="bn-BD">বাংলা voice</option><option value="en-US">English voice</option></select><button id="clearBtn">Clear chat</button><span class="tiny" style="margin-left:auto">Voice works best in Chrome</span></div>
+ <div id="chat"><div class="msg ai"><div class="who">P.O.O.K.I.E.E.</div>সিস্টেম প্রস্তুত। আমাকে বাংলায় অথবা ইংরেজিতে লিখে/বলে কিছু জিজ্ঞেস করো। প্রথমে Settings-এ Gemini API key যোগ করো।</div></div>
+ <div class="composer"><button class="mic" id="micBtn" title="Speak">🎙</button><textarea id="prompt" placeholder="Message POOKIEE… / এখানে লিখুন" rows="1"></textarea><button class="send" id="sendBtn">Send ➤</button></div>
+</section>
+<div class="note">মাইক্রোফোন ব্যবহারের জন্য HTTPS ওয়েবসাইট ও browser permission লাগবে। AI reply পেতে API key সেট করতে হবে।</div>
+<section class="panel settings" id="settings" hidden>
+ <h3>POOKIEE CONFIGURATION</h3>
+ <div class="field"><label>Gemini API Key (শুধু নিজের ডিভাইসে রাখুন)</label><input id="apiKey" type="password" placeholder="Paste your API key"></div>
+ <div class="field"><label>Model</label><select id="model"><option value="gemini-3.8-flash">gemini-3.8-flash</option><option value="gemini-3.5-flash-lite">gemini-3.5-flash-lite</option><option value="gemini-2.5-flash-lite">gemini-2.5-flash-lite</option></select></div>
+ <div class="row"><div class="field"><label>Assistant name</label><input id="assistantName" value="POOKIEE"></div><div class="field"><label>Reply style</label><select id="style"><option value="natural">Natural and friendly</option><option value="concise">Short and direct</option><option value="formal">Polite and formal</option></select></div></div>
+ <div class="actions"><button id="saveBtn">Save settings</button><button id="hideSettings">Close</button></div>
+ <p class="tiny">সতর্কতা: এই সহজ সংস্করণে API key এই browser-এর local storage-এ থাকে এবং API request সরাসরি Google-এ যায়। এটি public/shared website-এ ব্যবহার করবেন না। Google-এর free tier সীমা/মডেল বদলাতে পারে; free tier-এ পাঠানো কনটেন্ট Google-এর product উন্নতিতে ব্যবহৃত হতে পারে।</p>
+ <p class="tiny"><a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" style="color:var(--cyan)">Google AI Studio থেকে API key নিন ↗</a></p>
+</section>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const chat=$('chat'); let history=[]; let recognition=null; let listening=false;
+const SYS=`You are POOKIEE, a helpful personal AI assistant. Speak naturally and intelligently. Reply in the same language the user uses (Bangla or English). If the user mixes Bangla and English, respond naturally in that mix. Be honest about limitations. Do not claim to control devices or perform actions unless a connected tool actually did so. Style: {STYLE}.`;
+function addMsg(role,text){const d=document.createElement('div');d.className='msg '+(role==='user'?'user':'ai');const w=document.createElement('div');w.className='who';w.textContent=role==='user'?'YOU':$('assistantName').value||'POOKIEE';const b=document.createElement('div');b.textContent=text;d.append(w,b);chat.append(d);chat.scrollTop=chat.scrollHeight;return d}
+function setStatus(s){$('status').innerHTML=s}
+function load(){const s=JSON.parse(localStorage.getItem('jarvis_settings')||'{}');$('apiKey').value=s.key||'';$('model').value=s.model||'gemini-3.8-flash';$('assistantName').value=s.name||'POOKIEE';$('style').value=s.style||'natural';history=JSON.parse(localStorage.getItem('jarvis_history')||'[]');history.forEach(m=>addMsg(m.role,m.text))}
+function save(){const s={key:$('apiKey').value.trim(),model:$('model').value,name:$('assistantName').value.trim()||'POOKIEE',style:$('style').value};localStorage.setItem('jarvis_settings',JSON.stringify(s));setStatus('<b>● SETTINGS SAVED</b>');$('settings').hidden=true}
+function persist(){localStorage.setItem('jarvis_history',JSON.stringify(history.slice(-60)))}
+async function send(text){text=text.trim();if(!text)return;const key=$('apiKey').value.trim();if(!key){$('settings').hidden=false;addMsg('ai','প্রথমে Settings খুলে Gemini API key যোগ করো।');return}
+$('prompt').value='';history.push({role:'user',text});addMsg('user',text);persist();$('sendBtn').disabled=true;setStatus('<b>● THINKING</b> · PROCESSING REQUEST');const wait=addMsg('ai','একটু অপেক্ষা করো…');wait.lastChild.className='typing';
+try{
+ const s={name:$('assistantName').value||'POOKIEE',style:$('style').value,model:$('model').value};
+ const contents=history.slice(-20).map(m=>({role:m.role==='assistant'?'model':'user',parts:[{text:m.text}]}));
+ const response=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(s.model)}:generateContent?key=${encodeURIComponent(key)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({systemInstruction:{parts:[{text:SYS.replace('{STYLE}',s.style)}]},contents,generationConfig:{temperature:0.7,maxOutputTokens:1200}})});
+ const data=await response.json();if(!response.ok)throw new Error(data.error?.message||`API error ${response.status}`);
+ const answer=data.candidates?.[0]?.content?.parts?.map(p=>p.text||'').join('').trim()||'আমি উত্তর তৈরি করতে পারিনি।';wait.remove();history.push({role:'assistant',text:answer});addMsg('assistant',answer);persist();speak(answer);setStatus('<b>● SYSTEM READY</b> · RESPONSE COMPLETE');
+}catch(e){wait.remove();addMsg('assistant','দুঃখিত, সংযোগে সমস্যা হয়েছে: '+e.message+'। API key/model ঠিক আছে কি না দেখো।');setStatus('<span class="error">● CONNECTION ERROR</span>')}
+finally{$('sendBtn').disabled=false}}
+function speak(text){if(!('speechSynthesis'in window))return; speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang=/[\u0980-\u09FF]/.test(text)?'bn-BD':'en-US';u.rate=1; speechSynthesis.speak(u)}
+$('sendBtn').onclick=()=>send($('prompt').value);$('prompt').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send($('prompt').value)}});
+$('settingsBtn').onclick=()=>{$('settings').hidden=!$('settings').hidden};$('hideSettings').onclick=()=>$('settings').hidden=true;$('saveBtn').onclick=save;
+$('clearBtn').onclick=()=>{if(confirm('পুরোনো chat মুছে ফেলবে?')){history=[];persist();chat.innerHTML='';addMsg('assistant','Chat cleared. কীভাবে সাহায্য করতে পারি?')}};
+$('micBtn').onclick=()=>{const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){addMsg('assistant','এই browser-এ voice recognition নেই। Android/PC-তে Chrome ব্যবহার করো, অথবা text লিখে পাঠাও।');return}
+if(listening){recognition.stop();return}recognition=new SR();recognition.lang=$('inputLang').value;recognition.interimResults=false;recognition.maxAlternatives=1;recognition.onstart=()=>{listening=true;$('micBtn').classList.add('listening');setStatus('<b>● LISTENING</b> · SPEAK NOW')};recognition.onresult=e=>{$('prompt').value=e.results[0][0].transcript;send($('prompt').value)};recognition.onerror=e=>{addMsg('assistant','Voice error: '+e.error);setStatus('<b>● SYSTEM READY</b>')};recognition.onend=()=>{listening=false;$('micBtn').classList.remove('listening');setStatus('<b>● SYSTEM READY</b>')};recognition.start()};
+load();
+if('serviceWorker'in navigator && location.protocol.startsWith('http'))window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+</script>
+</body></html>
