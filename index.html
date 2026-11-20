@@ -49,7 +49,7 @@ button,input,select{font:inherit}button{cursor:pointer;border:1px solid var(--li
 const $=id=>document.getElementById(id);
 const chat=$('chat'); let history=[]; let recognition=null; let listening=false;
 const SYS=`You are POOKIEE, a helpful personal AI assistant. Speak naturally and intelligently. Reply in the same language the user uses (Bangla or English). If the user mixes Bangla and English, respond naturally in that mix. Be honest about limitations. Do not claim to control devices or perform actions unless a connected tool actually did so. Style: {STYLE}.`;
-function addMsg(role,text){const d=document.createElement('div');d.className='msg '+(role==='user'?'user':'ai');const w=document.createElement('div');w.className='who';w.textContent=role==='user'?'YOU':$('assistantName').value||'POOKIEE';const b=document.createElement('div');b.textContent=text;d.append(w,b);chat.append(d);chat.scrollTop=chat.scrollHeight;return d}
+function addMsg(role,text){const d=document.createElement('div');d.className='msg '+(role==='user'?'user':'ai');const w=document.createElement('div');w.className='who';w.textContent=role==='user'?'YOU':$('assistantName').value||'POOKIEE';const b=document.createElement('div');b.textContent=text;d.append(w,b);if(role!=='user' && text && !/একটু অপেক্ষা করো/.test(text)){const replay=document.createElement('button');replay.type='button';replay.textContent='🔊 শুনুন';replay.style.cssText='margin-top:8px;padding:6px 10px;font-size:12px';replay.onclick=()=>speak(text,true);d.append(replay)}chat.append(d);chat.scrollTop=chat.scrollHeight;return d}
 function setStatus(s){$('status').innerHTML=s}
 function load(){const s=JSON.parse(localStorage.getItem('jarvis_settings')||'{}');$('apiKey').value=s.key||'';$('model').value=s.model||'gemini-3.8-flash';$('assistantName').value=s.name||'POOKIEE';$('style').value=s.style||'natural';history=JSON.parse(localStorage.getItem('jarvis_history')||'[]');history.forEach(m=>addMsg(m.role,m.text))}
 function save(){const s={key:$('apiKey').value.trim(),model:$('model').value,name:$('assistantName').value.trim()||'POOKIEE',style:$('style').value};localStorage.setItem('jarvis_settings',JSON.stringify(s));setStatus('<b>● SETTINGS SAVED</b>');$('settings').hidden=true}
@@ -64,11 +64,34 @@ try{
  const answer=data.candidates?.[0]?.content?.parts?.map(p=>p.text||'').join('').trim()||'আমি উত্তর তৈরি করতে পারিনি।';wait.remove();history.push({role:'assistant',text:answer});addMsg('assistant',answer);persist();speak(answer);setStatus('<b>● SYSTEM READY</b> · RESPONSE COMPLETE');
 }catch(e){wait.remove();addMsg('assistant','দুঃখিত, সংযোগে সমস্যা হয়েছে: '+e.message+'। API key/model ঠিক আছে কি না দেখো।');setStatus('<span class="error">● CONNECTION ERROR</span>')}
 finally{$('sendBtn').disabled=false}}
-function speak(text){if(!('speechSynthesis'in window))return; speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang=/[\u0980-\u09FF]/.test(text)?'bn-BD':'en-US';u.rate=1; speechSynthesis.speak(u)}
-$('sendBtn').onclick=()=>send($('prompt').value);$('prompt').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send($('prompt').value)}});
+let speechUnlocked=false;
+function unlockSpeech(){if(!('speechSynthesis'in window)||speechUnlocked)return;try{const u=new SpeechSynthesisUtterance('');u.volume=0;u.lang='en-US';speechSynthesis.speak(u);speechUnlocked=true}catch(e){}}
+function speak(text,manual=false){
+  if(!('speechSynthesis'in window)){if(manual)addMsg('assistant','এই browser-এ Text-to-Speech সমর্থিত নয়। Chrome-এর 최신 সংস্করণ ব্যবহার করো।');return}
+  try{
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(text);
+    const isBangla=/[\u0980-\u09FF]/.test(text);
+    u.lang=isBangla?'bn-BD':'en-US';
+    u.rate=1;u.pitch=1;u.volume=1;
+    const chooseVoice=()=>{
+      const voices=speechSynthesis.getVoices();
+      let v=voices.find(x=>x.lang.toLowerCase()===(isBangla?'bn-bd':'en-us'));
+      if(!v && isBangla)v=voices.find(x=>x.lang.toLowerCase().startsWith('bn'));
+      if(!v && !isBangla)v=voices.find(x=>x.lang.toLowerCase().startsWith('en'));
+      if(v)u.voice=v;
+      u.onerror=e=>{console.warn('POOKIEE speech error:',e.error);setStatus('<span class="error">● VOICE ERROR</span> · আবার 🔊 শুনুন চাপো')};
+      u.onend=()=>setStatus('<b>● SYSTEM READY</b> · RESPONSE COMPLETE');
+      speechSynthesis.speak(u);
+    };
+    if(speechSynthesis.getVoices().length)chooseVoice();
+    else{speechSynthesis.onvoiceschanged=()=>{speechSynthesis.onvoiceschanged=null;chooseVoice()};setTimeout(()=>{if(speechSynthesis.getVoices().length && speechSynthesis.pending===false && speechSynthesis.speaking===false)chooseVoice()},800)}
+  }catch(e){console.error(e);if(manual)addMsg('assistant','Voice চালু করা যায়নি। Chrome-এ আবার চেষ্টা করো।')}
+}
+$('sendBtn').onclick=()=>{unlockSpeech();send($('prompt').value)};$('prompt').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();unlockSpeech();send($('prompt').value)}});
 $('settingsBtn').onclick=()=>{$('settings').hidden=!$('settings').hidden};$('hideSettings').onclick=()=>$('settings').hidden=true;$('saveBtn').onclick=save;
 $('clearBtn').onclick=()=>{if(confirm('পুরোনো chat মুছে ফেলবে?')){history=[];persist();chat.innerHTML='';addMsg('assistant','Chat cleared. কীভাবে সাহায্য করতে পারি?')}};
-$('micBtn').onclick=()=>{const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){addMsg('assistant','এই browser-এ voice recognition নেই। Android/PC-তে Chrome ব্যবহার করো, অথবা text লিখে পাঠাও।');return}
+$('micBtn').onclick=()=>{unlockSpeech();const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){addMsg('assistant','এই browser-এ voice recognition নেই। Android/PC-তে Chrome ব্যবহার করো, অথবা text লিখে পাঠাও।');return}
 if(listening){recognition.stop();return}recognition=new SR();recognition.lang=$('inputLang').value;recognition.interimResults=false;recognition.maxAlternatives=1;recognition.onstart=()=>{listening=true;$('micBtn').classList.add('listening');setStatus('<b>● LISTENING</b> · SPEAK NOW')};recognition.onresult=e=>{$('prompt').value=e.results[0][0].transcript;send($('prompt').value)};recognition.onerror=e=>{addMsg('assistant','Voice error: '+e.error);setStatus('<b>● SYSTEM READY</b>')};recognition.onend=()=>{listening=false;$('micBtn').classList.remove('listening');setStatus('<b>● SYSTEM READY</b>')};recognition.start()};
 load();
 if('serviceWorker'in navigator && location.protocol.startsWith('http'))window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
